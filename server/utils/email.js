@@ -1,6 +1,12 @@
 import nodemailer from 'nodemailer';
 
 export const sendEmail = async ({ to, subject, text }) => {
+  // Check if email configuration is available
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('Email not sent: EMAIL_USER or EMAIL_PASS not configured');
+    return { message: 'Email configuration missing' };
+  }
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {

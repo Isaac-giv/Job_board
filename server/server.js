@@ -9,6 +9,8 @@ import jobRoutes from './routes/jobs.js';
 import applicationRoutes from './routes/applications.js';
 
 dotenv.config();
+
+// Connect to database
 connectDB();
 
 const app = express();
@@ -18,9 +20,18 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// Health check endpoint (required for many deployment platforms)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
@@ -33,5 +44,34 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    msg: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Handle 404 routes
+app.use((req, res) => {
+  res.status(404).json({ msg: 'Route not found' });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err.message);
+  // Close server & exit process
+  server.close(() => process.exit(1));
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+  process.exit(1);
+});
+
+export default app;
