@@ -6,16 +6,21 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError('')
     try {
       await login(email, password)
       navigate('/')
     } catch (err) {
       setError(err.response?.data?.msg || 'Login failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -43,7 +48,9 @@ const Login = () => {
               required 
             />
           </div>
-          <button type="submit">Login</button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Loading...' : 'Login'}
+          </button>
         </form>
         <div className="auth-links">
           Don't have an account? <Link to="/register">Register here</Link>

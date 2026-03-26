@@ -5,17 +5,22 @@ import { useAuth } from '../context/AuthContext'
 const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'seeker' })
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError('')
     try {
       await register(form)
       navigate('/')
     } catch (err) {
       setError(err.response?.data?.msg || 'Registration failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -62,7 +67,9 @@ const Register = () => {
               <option value="employer">Employer</option>
             </select>
           </div>
-          <button type="submit">Register</button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Loading...' : 'Register'}
+          </button>
         </form>
         <div className="auth-links">
           Already have an account? <Link to="/login">Login here</Link>
