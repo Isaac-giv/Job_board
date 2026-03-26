@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 const instance = axios.create({
-  baseURL: '/api' // because of proxy
-})
+  baseURL: import.meta.env.VITE_API_URL || '/api'
+});
 
 // Add token to every request if available
 instance.interceptors.request.use(
