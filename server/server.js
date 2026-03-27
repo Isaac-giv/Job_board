@@ -10,8 +10,7 @@ import applicationRoutes from './routes/applications.js';
 
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Database connection and server startup are coordinated in startServer below.
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -59,13 +58,32 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+let server;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (err) {
+    console.error( err.message);
+    if (err.connectionContext) {
+      console.error('MongoDB failure context:', err.connectionContext);
+    }
+    process.exit(1);
+  }
+};
+
+
+startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err.message);
-  // Close server & exit process
-  server.close(() => process.exit(1));
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });
 
 // Handle uncaught exceptions
